@@ -1,0 +1,136 @@
+load("snpsif.rda")
+snpsif[1:10,]
+nam.10let = gsub(".*_SNP_6_", "", snpsif[,1])
+load("../inst/parts/chr22.rda")
+library(snpStats)
+chr22
+rownames(snpsif) = nam.10let
+snpsif_995 = snpsif[rownames(chr22),]
+dim(snpsif_995)
+snpsif_995[1:5,]
+snpsif[1:10,]
+nam.10let[1:5]
+nam.10let = gsub(".*SNP_6_", "", snpsif[,1])
+table(nchar(nam.10let))
+rownames(snpsif) = nam.10let
+snpsif_995 = snpsif[rownames(chr22),]
+snpsif_995[1:5,]
+save(snpsif_995, file="snpsif_995.rda")
+library(ccleWrap)
+data(ccle)
+ccle
+ccle[[1]]
+source("../R/allS4.R")
+ccle[[1]]
+getClass(class(ccle[[1]]))
+table(organ(ccle))
+lineo = paste(line(ccle), organ(ccle), sep="_")
+lineo[1:10,]
+lineo[1:10]
+mean(lineo %in% snpsif_995$CCLE.name)
+lineo[1] %in% snpsif_995$CCLE.name
+lineo[2] %in% snpsif_995$CCLE.name
+lineo[2]
+grep("PROSTATE", snpsif_995$CCLE.name, value=TRUE)[1:20]
+length(grep("22Rv1", lineo))
+lineo2 = gsub("22Rv1", "22RV1", lineo)
+mean(lineo2 %in% snpsif_995$CCLE.name)
+lineo2[2] %in% snpsif_995$CCLE.name
+lineo2[3] %in% snpsif_995$CCLE.name
+lineo2[3]
+grep("CENTRAL_NERVO", snpsif_995$CCLE.name, value=TRUE)[1:20]
+lineo2[4]
+lineo2[4] %in% snpsif_995$CCLE.name
+lineo2[5] %in% snpsif_995$CCLE.name
+lineo2[5]
+grep("CENTRAL_NERVO", snpsif_995$CCLE.name, value=TRUE)[21:40]
+snpsif[1:4,]
+ccle
+getClass(class(ccle[[1]]))
+grep("42-MG-BA", lineo2)
+lineo3 = gsub("42-MG-BA", "42MGBA", lineo2)
+mean(lineo3 %in% snpsif_995$CCLE.name)
+lineo3[5] %in% snpsif_995$CCLE.name
+lineo3[5]
+agrep(lineo3, snpsif_995$CCLE.name)
+agrep(lineo3[5], snpsif_995$CCLE.name)
+agrep(lineo3[5], snpsif_995$CCLE.name, value=TRUE)
+length(grep("-", lineo3))
+lineo4
+lineo4 = gsub("-", "", lineo3)
+mean(lineo4 %in% snpsif_995$CCLE.name)
+which(!(lineo4 %in% snpsif_995$CCLE.name))[1:10]
+lineo4[23]
+lineo4[24]
+lineo4[25]
+which(!(toupper(lineo4) %in% snpsif_995$CCLE.name))[1:10]
+mean(toupper(lineo4) %in% snpsif_995$CCLE.name)
+lineo5 = toupper(lineo4)
+which(!(lineo5 %in% snpsif_995$CCLE.name))[1:10]
+lineo5[.Last.value]
+sapply(.Last.value, agrep, snpsif_995$CCLE.name)
+snpsif_995$CCLE.name[764]
+snpsif_995$CCLE.name[c(83,93)]
+snpsif_995$CCLE.name[c(383)]
+snpsif_995$CCLE.name[c(484)]
+lineo6 = gsub(" ", "", lineo5)
+mean(lineo6 %in% snpsif_995$CCLE.name)
+which(!(lineo6 %in% snpsif_995$CCLE.name))[1:10]
+lineo6[.Last.value]
+sapply(.Last.value, agrep, snpsif_995$CCLE.name)
+snpsif_995$CCLE.name[86]
+grep("COLO.*LUNG", snpsif_995$CCLE.name, value=TRUE)
+grep("BCG.*STOM", snpsif_995$CCLE.name, value=TRUE)
+grep("B.*STOM", snpsif_995$CCLE.name, value=TRUE)
+snpsif_995$CCLE.name[220]
+snpsif_995$CCLE.name[272]
+mean(lineo6 %in% snpsif_995$CCLE.name)
+length(lineo6)*.Last.value
+table(table(lineo6))
+length(lineo6)
+sum(duplicated(lineo6[which(lineo6 %in% snpsif_995$CCLE.name)]))
+sum(lineo6==lineo6[1])
+lineo6[1]
+ccle[which(lineo6==lineo6[1])]
+organ(.Last.value)
+ccle[which(lineo6==lineo6[1])]
+compound(.Last.value)
+mean(snpsif_995$CCLE.name %in% lineo6)
+which(!(snpsif_995$CCLE.name %in% lineo6))[1:10]
+snpsif_995$CCLE.name[.Last.value]
+sapply(.Last.value, agrep, lineo6)
+lineo6[36]
+?agrep
+sapply(.Last.value, agrep, lineo6, .01)
+?agrep
+sapply(.Last.value, agrep, lineo6, max.dist=.01)
+which(!(snpsif_995$CCLE.name %in% lineo6))[1:10]
+snpsif_995$CCLE.name[.Last.value]
+sapply(.Last.value, agrep, lineo6, max.dist=.01)
+tries = .Last.value
+lineo6[tries[[1]]]
+lineo7 = gsub("^L3.3", "L33", lineo6)
+lineo7[tries[[2]]]
+lineo8 = sub("\\." "", lineo7)
+lineo8 = sub("\\\." "", lineo7)
+lineo8 = sub("\\\\." "", lineo7)
+lineo8 = sub("\." "", lineo7)
+lineo8 = sub("\\." "", lineo7)
+lineo8 = sub("\\\\." "", lineo7)
+?sub
+kk = "a.b"
+gsub(".", "", kk)
+gsub("\.", "", kk)
+gsub("\\.", "", kk)
+lineo8 = sub("\\." "", lineo7)
+sub("\\.", "", kk)
+lineo8 = sub("\\.", "", lineo7)
+which(!(snpsif_995$CCLE.name %in% lineo8))[1:10]
+mean(!(snpsif_995$CCLE.name %in% lineo8))
+snpsif_995$CCLE.name[23:24]
+which(!(snpsif_995$CCLE.name %in% lineo8))[1:10]
+snpsif_995$CCLE.name[.Last.value]
+lineo8[347]
+lineo8[1354]
+length(lineo8)
+savehistory(file="fixup.match.hist.txt")

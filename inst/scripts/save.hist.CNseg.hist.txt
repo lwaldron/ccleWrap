@@ -1,0 +1,16 @@
+seg = read.delim(dir(patt="seg$", sep="\t", h=TRUE))
+seg = read.delim(dir(patt="seg$"), sep="\t", h=TRUE))
+seg = read.delim(dir(patt="seg$"), sep="\t", h=TRUE)
+dim(seg)
+seg[1:5,]
+library(GenomicRanges)
+ccleCNSeg = GRanges(paste(chr, seg$Chromosome, sep=""), IRanges(seg$Start, seg$End))
+ccleCNSeg = GRanges(paste("chr", seg$Chromosome, sep=""), IRanges(seg$Start, seg$End))
+seg[1:5,]
+class(seg[,1])
+values(ccleCNSeg) = seg[,-c(2,3,4)]
+ccleCNSeg
+ccleCNSeg$CCLE_name = as.character(ccleCNSeg$CCLE_name)
+ccleCNSeg
+save(ccleCNSeg, file="ccleCNSeg.rda")
+savehistory(file="save.hist.CNseg.hist.txt")

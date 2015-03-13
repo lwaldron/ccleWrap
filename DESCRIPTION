@@ -1,0 +1,10 @@
+Package: ccleWrap
+Title: wrapper structures and functions for Broad/Novartis CCLE resources
+Version: 0.0.4002
+Author: VJ Carey <stvjc@channing.harvard.edu>
+Description: structures and functions to interrogate CCLE 
+Suggests: hgu133plus2hsentrezg.db
+Depends: Biobase, snpStats, GenomicRanges
+Maintainer: VJ Carey <stvjc@channing.harvard.edu>
+License: Artistic-2.0
+LazyLoad: yes

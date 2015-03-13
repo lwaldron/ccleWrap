@@ -1,0 +1,358 @@
+
+%
+% NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
+% likely to be overwritten.
+%
+
+%\VignetteIndexEntry{}
+%\VignetteDepends{}
+%\VignetteKeywords{}
+%\VignettePackage{}
+
+\documentclass[12pt]{article}
+
+\usepackage{amsmath,pstricks}
+\usepackage[authoryear,round]{natbib}
+\usepackage{hyperref}
+
+
+\textwidth=6.2in
+\textheight=8.5in
+%\parskip=.3cm
+\oddsidemargin=.1in
+\evensidemargin=.1in
+\headheight=-.3in
+
+\newcommand{\scscst}{\scriptscriptstyle}
+\newcommand{\scst}{\scriptstyle}
+
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+\newcommand{\Rfunarg}[1]{{\texttt{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+
+\textwidth=6.2in
+
+\bibliographystyle{plainnat} 
+ 
+\begin{document}
+%\setkeys{Gin}{width=0.55\textwidth}
+
+\title{ccleWrap: template for managing the Broad/Novartis
+Cancer Cell Line Encyclopedia distribution}
+\author{VJ Carey}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+The Cancer Cell Line Encyclopedia (CCLE) is described in
+\citet{Barretina:2012p4935} and can be explored
+with registration at \url{broadinstitute.org/ccle}.
+Raw and processed data and metadata can be acquired
+by registered users,
+but redistribution is not permitted.  This
+vignette describes the \textit{ccleWrap} package that
+can be used to transform, manage, and analyze the CCLE data
+using Bioconductor facilities.  Detailed scripts
+are provided for developing the package launch pad based
+on downloads; see the inst/transform folder of the ccleWrap
+package source.  This document assumes the contents
+have been transformed and installed as described there.
+
+Various complications in the raw data exist as of 20 Jan 2013.
+Cell line names in the pharmacologic profiling archive do not
+always agree with those used in genotype data structures.
+For example, \verb+"42-MG-BA_CENTRAL_NERVOUS_SYSTEM"+ is used
+in the pharmacologic profiling data, whereas no hyphens are
+employed in the SNP genotyping cell line identifiers.  
+Unfortunately the line name is the only key that can be used
+to resolve the many:one mapping from pharmacologic profiles
+to genotypes.  Some manual work was performed to facilitate
+joins with ``guessed'' revisions to line names.
+
+\section{Basic contents}
+
+\subsection{Cell line genotypes}
+Genotype calls are losslessly converted from birdseed output
+consuming 4GB compressed to snpStats SnpMatrix instances
+consuming 170MB.  The genotypes are based on the Affy 6.0
+genomewide SNP chip and are stored by chromosome using dbSNP identifiers
+and regimented sample identifiers.
+
+<<lkgeno22>>=
+require(snpStats)
+load(system.file("parts/chr22.rda", package="ccleWrap"))
+chr22
+as(chr22[1:4,1:4], "character")
+@
+
+Sample identification is given in the \verb+snpsif_995+
+data frame.
+<<lkif>>=
+library(ccleWrap)
+data(snpsif_995)
+snpsif_995[100:102,]
+@
+This was a simple import of the
+\verb+CCLE_SNP.Arrays.sif_2012-09-29.txt+
+text file provided for download with the CCLE SNP arrays.
+
+Information on using the genotypes for genomewide association
+testing for pharmacologic or expression characteristics is given below.
+
+\subsection{Copy number variants: segmentation}
+
+<<lkc>>=
+data(ccleCNSeg)
+ccleCNSeg
+@
+
+\subsection{Targeted variants via hybrid capture} 
+
+A GRanges instance has been classed to a simple
+\texttt{targVar} container structure to reduce dump volumes.
+<<lkd>>=
+data(ccleTargVar)
+ccleTargVar
+@
+
+We can tabulate aspects of variants identified by this method,
+focusing on named genes or regions specified in genomic coordinates.
+<<lkm>>=
+length(subsetByOverlaps(ccleTargVar, GRanges("chr20", IRanges(1,2e6))))
+table(ccleTargVar$Hugo_Symbol)[1:10]
+table(ccleTargVar$Variant_Type)
+table(ccleTargVar$Variant_Classification)
+cabl1 = ccleTargVar[ ccleTargVar$Hugo_Symbol == "ABL1" ]
+cabl1
+table(cabl1$Variant_Type)
+@
+We can identify the samples with non-SNP variants in ABL1:
+<<lksa>>=
+table(cabl1$Tumor_Sample_Barcode [ cabl1$Variant_Type != "SNP" ])
+@
+
+\subsection{Pharmacologic profiling data}
+
+A special container has been used to manage the profiling data.
+<<lkd>>=
+data(ccleRx)
+ccleRx
+ccleRx[[100]]
+@
+
+We can get an overview of the lines, source organs, and compounds
+employed; here we look at frequencies for 10 arbitrarily selected
+values for each characteristic.
+<<getov>>=
+table(line(ccleRx))[1:10]
+table(organ(ccleRx))[1:10]
+table(compound(ccleRx))[1:10]
+@
+The total numbers of distinct lines, organs and compounds:
+<<lku>>=
+length(unique(line(ccleRx)))
+length(unique(organ(ccleRx)))
+length(unique(compound(ccleRx)))
+@
+
+Double brackets extract specific experiments; single brackets
+obtain restricted experiment sets.
+
+Visualization of the activity profile is straightforward:
+
+\setkeys{Gin}{width=0.40\textwidth}
+\begin{tabular}{cc}
+<<lkm,fig=TRUE,echo=FALSE>>=
+plot(ccleRx[[100]])
+@
+&
+<<lkm2,fig=TRUE,echo=FALSE>>=
+plot(ccleRx[[101]])
+@
+\end{tabular}
+
+The red dashed line is the CCLE estimate of IC50.
+
+We can also visualize sets of profiles.  Here we examine
+the raw data on activity profiles for the compound and
+cell lines depicted in Figure 3b of the Barettini paper.
+The single bracket syntax and accessors make this
+quite trivial.
+
+\setkeys{Gin}{width=0.60\textwidth}
+\begin{center}
+<<lkli,fig=TRUE>>=
+fig3braw = ccleRx[ which(compound(ccleRx)=="PD-0325901" & 
+         line(ccleRx) %in% c("CHP-212", "IPC-298", "SK-MEL-2", 
+                               "ONS-76", "SK-N-SH")) ]
+plot(fig3braw)
+@
+\end{center}
+
+
+\subsection{Expression data}
+
+The expression data is housed in an ExpressionSet instance
+as defined in Biobase.  The GCT format 
+\verb+CCLE_Expression_Entrez_2012-09-29.gct+
+source was used.  This is annotated with the UMich BrainArray CDF with
+AnnotationDbi resource at
+\url{
+http://brainarray.mbni.med.umich.edu/Brainarray/Database/CustomCDF/15.1.0/entrezg.asp
+}.
+
+<<lkex>>=
+data(ccleEx)
+ccleEx
+@
+
+\section{Integrative analyses}
+
+\subsection{Expression and drug activity}
+
+Inconsistent names are used for lines as described in pharmacologic
+profiling and expression microarray metadata.  The following
+function allows some harmonization.
+<<dorep>>=
+repairNames = function (x) 
+{
+    cn = paste(line(x), organ(x), sep="_")
+    toupper(gsub("-", "", gsub(" ", "", cn)))
+}
+@
+
+We can bind the growth inhibition concentrations for cell lines
+to expression data, with appropriate subsetting.  
+First we reproduce the finding of Barretina et al. on the
+expression correlates of sensitivity to irinotecan.
+<<doi>>=
+irx = ccleRx[ which(compound(ccleRx) == "Irinotecan") ]
+eirx = bindEI(ccleEx, irx)
+library(limma)
+irifit = lmFit(eirx, model.matrix(~log10(IC50), pData(eirx)))
+ebirifit = eBayes(irifit)
+tte = topTable(ebirifit, 2)
+library(hgu133plus2hsentrezg.db)
+syms = unlist(mget(tte[,1], hgu133plus2hsentrezgSYMBOL))
+tte = cbind(tte, syms)
+tte
+@
+This confirms substantial association between SLFN11 expression
+in Irinotecan sensitivity.
+
+Visualizing the association is useful:
+
+<<lkassoS,fig=TRUE>>=
+ggg = ggplot(data.frame(slex=exprs(eirx)[17990,], lic50=log10(eirx$IC50), org=eirx$organ))
+ggg + geom_point(aes(x=slex, y=lic50, colour=org)) + 
+   ylab("Irinotecan log IC50") + xlab("SLFN11 expression")
+@
+
+
+
+Organ
+of origin of the cell line is also propagated with the
+IC50.  In this example we will ask whether there are genes
+whose expression level correlates with IC50 of MEK inhibitors.
+<<bindi>>=
+ccMEK = ccleRx[ which(target(ccleRx) == "MEK") ]
+exMEK = bindEI(ccleEx, ccMEK)
+exMEK
+@
+We will confine attention to a small number of organs with reasonable
+numbers of experiments present, and address the question globally
+and with allowance for organ-specific effects.  The figure below
+picks the feature with strongest association in 2 models:
+first modeling association of IC50 with association marginally,
+then adjusting for organ and interaction of IC50 with organ.
+<<doo>>=
+kp = c("SKIN", "HAEMATOPOIETIC_AND_LYMPHOID_TISSUE", 
+    "PANCREAS")
+exMEKo = exMEK[, exMEK$organ %in% kp]
+sho = c("sk", "bl", "pc")
+names(sho) = kp
+exMEKo$organ = sho[exMEKo$organ]
+exMEKo = exMEKo[,exMEKo$IC50 < 8] # non-active drugs
+exMEKo = exMEKo[,-c(38,95)]
+exMEKo$lic50 = log10(exMEKo$IC50)
+exMEKo$organ = factor(exMEKo$organ)
+des0 = model.matrix(~lic50, data=pData(exMEKo))
+des = model.matrix(~lic50*organ, data=pData(exMEKo))
+<<goon,cache=TRUE,echo=FALSE>>=
+f1 = lmFit(exMEKo, des0, method="robust")
+f2 = lmFit(exMEKo, des, method="robust")
+@
+<<more,echo=FALSE>>=
+ef1 = eBayes(f1)
+ef2 = eBayes(f2)
+options(digits=3)
+ttglob = topTable(ef1,2)
+ttact = topTable(ef2,2)
+ttorg = topTable(ef2,3:4)
+ttinter = topTable(ef2,5:6)
+@
+
+Various statistically significant associations between
+drug IC50 and gene expression levels can be identified depending on context.
+We used robust linear modeling to reduce effects of outliers on inference.
+
+
+\setkeys{Gin}{width=0.85\textwidth}
+\begin{center}
+<<lkf,fig=TRUE,echo=FALSE>>=
+library(hgu133plus2hsentrezg.db)
+opar = par(no.readonly=TRUE)
+par(mfrow=c(2,2), mar=c(5,5,2,2))
+ieplot(exMEKo, ttglob[1,1], main="main effect", legx=8.5, legy=.7)
+ieplot(exMEKo, ttact[1,1], main="adj. org./int", noleg=TRUE)
+ieplot(exMEKo, ttorg[1,1], main="organ (F test)", noleg=TRUE)
+ieplot(exMEKo, ttinter[1,1], main="interaction (F test)", noleg=TRUE)
+@
+\end{center}
+
+\subsection{Copy number and drug activity}
+
+We'll reuse the image of Irinotecan sensitivity computed above as \texttt{irx}.
+We bind the sensitivity data to copy number segmentation values found over SLFN11 exons
+and visualize.  (Most of the CN segments identified are larger than the gene, so this
+is a crude assessment.)
+
+<<getlo,fig=TRUE>>=
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+txdb = TxDb.Hsapiens.UCSC.hg19.knownGene
+slex = exons(txdb, vals=list(gene_id="91607"))
+scn = subsetByOverlaps(ccleCNSeg, slex) 
+scn = bindCNRX(scn, irx)
+plot(IC50~Segment_Mean, data=IRanges::as.data.frame(values(scn)), col=as.numeric(factor(scn$organ)), pch=19,
+  ylab="Irinotecan IC50", xlab="Normalized Segment CN over SLFN11")
+@
+
+
+%dofour = function(es, probes) {
+%  ex = lapply(probes, function(x) data.frame(expr=exprs(ex)[x,], lic50=ex$lic50, probe=x,
+%       organ=as.character(ex$organ), stringsAsFactors=FALSE))
+%  ex[[1]]$top=1
+%  ex[[1]]$left=1
+%  ex[[2]]$top=1
+%  ex[[2]]$left=2
+%  ex[[3]]$top=2
+%  ex[[3]]$left=1
+%  ex[[4]]$top=2
+%  ex[[4]]$left=2
+%  exd = do.call(rbind, ex)
+%  ggplot(exd) + geom_point(aes(x=expr, y=lic50, shape=organ, colour=organ)) + facet_grid(top~left)
+%}
+% 
+%dofour(exMEKo, c(ttglob[1,1], ttact[1,1], ttorg[1,1], ttinter[1,1]))
+%
+
+
+\bibliography{ccle}
+
+\end{document}

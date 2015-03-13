@@ -1,0 +1,29 @@
+source("nstring2vec.R")
+dir()
+ddata = read.csv("CCLE_NP24.2009_Drug_data_2012.02.20.csv", stringsAsFactors=FALSE)
+dim(ddata)
+ddata[1:3,]
+dosemat = sapply(ddata[,5], nstring2vec)
+dim(dosemat)
+dosemat[1:4]
+table(sapply(dosemat,length))
+activityMeds = sapply(ddata[,"Activity.Data..median."], nstring2vec)
+table(sapply(activityMeds,length))
+activitySDs = sapply(ddata[,"Activity.SD"], nstring2vec)
+table(sapply(activitySDs,length))
+lines = sub("_", ",", ddata[,1])
+lineName = sapply(strsplit(lines, ","), "[", 1)
+lineName[1:10]
+lineOrg = sapply(strsplit(lines, ","), "[", 1)
+table(lineOrg)
+ddata[1:30,1]
+lineName[1:10]
+lineOrg[1:10]
+lineOrg = sapply(strsplit(lines, ","), "[", 2)
+table(lineOrg)
+ddata[1,]
+setClass("ccleExpt", representation(line="character", organ="character",
+ compound="character", target="character", doses_uM="numeric",
+ activityMedian="numeric", activitySD="numeric", fitType="character",
+ EC50_uM="numeric", IC50_uM="numeric", Amax="numeric", ActArea="numeric"))
+savehistory(file="buildClass.hist.txt")
