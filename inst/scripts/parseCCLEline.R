@@ -24,10 +24,16 @@ setMethod("show", "ccleSet", function(object) {
 csvname="CCLE_NP24.2009_Drug_data_2012.02.20.csv"
 csvhash.md5="b64295ef99912d1d4bead76461d0e2a1"
 
+nstring2vec = function(x, sep=",") {
+  as.numeric(strsplit(x, sep)[[1]])
+}
+
 parseCCLEline = function(dfline, validateNames=FALSE) {
  # parse a row of ccle CSV import
  if (nrow(dfline)!=1 || !is.data.frame(dfline)) 
     stop("input must be 1line data.frame")
+ if(!identical(colnames(dfline)[1], "CCLE.Cell.Line.Name"))
+   stop("First column name in dfline should be CCLE.Cell.Line.Name")
  jan2013names = c("CCLE.Cell.Line.Name", "Primary.Cell.Line.Name", "Compound", 
 "Target", "Doses..uM.", "Activity.Data..median.", "Activity.SD", 
 "Num.Data", "FitType", "EC50..uM.", "IC50..uM.", "Amax", "ActArea"
@@ -35,9 +41,7 @@ parseCCLEline = function(dfline, validateNames=FALSE) {
  if (validateNames && !isTRUE(all.equal(names(dfline), jan2013names)))
      warning("it appears the names of the input data.frame do not agree with expectation")
  getOrgan = function(x) {x = sub("_", "@@", x); gsub(".*@@", "", x) }
- nstring2vec = function(x, sep=",") {
-    as.numeric(strsplit(x, sep)[[1]])
-    }
+
  cvec = as.character(dfline)
  new("ccleExpt",
       organ=getOrgan(cvec[1]),
