@@ -12,16 +12,14 @@ parseCCLEline = function(dfline, validateNames=FALSE) {
  if (validateNames && !isTRUE(all.equal(names(dfline), jan2013names)))
      warning("it appears the names of the input data.frame do not agree with expectation")
  getOrgan = function(x) {x = sub("_", "@@", x); gsub(".*@@", "", x) }
- nstring2vec = function(x, sep=",") {
-    as.numeric(strsplit(x, sep)[[1]])
-    }
  cvec = as.character(dfline)
+ cvec[cvec=="NA"] <- NA
  new("ccleExpt",
       organ=getOrgan(cvec[1]),
       line=cvec[2], compound=cvec[3],
-      target = cvec[4], doses_uM=nstring2vec(cvec[5]),
-      activityMedian=nstring2vec(cvec[6]),
-      activitySD=nstring2vec(cvec[7]),
+      target = cvec[4], doses_uM=.nstring2vec(cvec[5]),
+      activityMedian=.nstring2vec(cvec[6]),
+      activitySD=.nstring2vec(cvec[7]),
       fitType=cvec[9],
       EC50_uM = as.numeric(cvec[10]),
       IC50_uM = as.numeric(cvec[11]),
